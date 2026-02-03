@@ -1,11 +1,11 @@
 const screen = document.getElementById("screen");
 
 const GAME_CATEGORIES = {
-  "🦁 Animals": ["Lion","Elephant","Penguin","Dolphin","Eagle","Tiger","Giraffe","Zebra","Kangaroo","Panda"],
-  "🍎 Fruits": ["Apple","Banana","Orange","Strawberry","Grape","Watermelon","Pineapple","Mango","Kiwi","Blueberry"],
-  "🌍 Countries": ["France","Japan","Brazil","Australia","Mexico","Canada","India","Egypt","Italy","Germany"],
-  "🍕 Food": ["Pizza","Burger","Sushi","Taco","Pasta","Salad","Sandwich","Steak","Soup","Donut"],
-  "⚽ Sports": ["Football","Basketball","Tennis","Baseball","Hockey","Volleyball","Swimming","Golf","Boxing","Cricket"]
+  "🦁 Animals": ["Lion","Elephant","Penguin","Dolphin","Eagle"],
+  "🍎 Fruits": ["Apple","Banana","Orange","Strawberry","Grape"],
+  "🌍 Countries": ["France","Japan","Brazil","Australia","Mexico"],
+  "🍕 Food": ["Pizza","Burger","Sushi","Taco","Pasta"],
+  "⚽ Sports": ["Football","Basketball","Tennis","Baseball","Hockey"]
 };
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -32,49 +32,33 @@ function render(html) {
 /* ---------- SETUP ---------- */
 
 function setupScreen() {
-  const pills = state.players.map(p => `<span class="pill">👤 ${esc(p)}</span>`).join("");
-
   render(`
 <div class="term">
-Add players (min 2), then start.
+Add players (min 2) then start.
 
 Rules:
-• 1 Imposter 🕵️
-• Everyone else sees the word
-• Vote players out
-• Tie = no elimination
-• Final 2 with imposter = imposter wins
+• Vote continues until imposter is eliminated
+• OR final 2 remains with imposter
+• Ties = no elimination
 </div>
 
 <div class="row">
   <input id="name" class="input" placeholder="Player name" />
   <button id="add" class="btn">➕ Add</button>
   <button id="start" class="btn" ${state.players.length < 2 ? "disabled" : ""}>🚀 Start</button>
-  <button id="reset" class="btn">🧹 Reset</button>
-</div>
-
-<div style="margin-top:10px">
-<b>Players:</b><br/>
-${pills || "None"}
 </div>
   `);
 
   const name = document.getElementById("name");
-  name.focus();
 
   document.getElementById("add").onclick = () => {
     const n = name.value.trim();
     if (!n || state.players.includes(n)) return;
     state.players.push(n);
-    name.value = "";
     setupScreen();
   };
 
   document.getElementById("start").onclick = startRound;
-  document.getElementById("reset").onclick = () => {
-    Object.assign(state, { players: [], round: 1 });
-    setupScreen();
-  };
 }
 
 /* ---------- ROUND ---------- */
@@ -137,10 +121,9 @@ ${imp ? "Secret Word: ???" : "Secret Word: " + state.word}
 function discussionScreen() {
   render(`
 <div class="term">
-💬 DISCUSSION
+💬 DISCUSSION – Cycle ${state.cycle}
 
-Give 1-word clues.
-Cycle ${state.cycle}
+Give one-word clues.
 </div>
 
 <div class="row">
@@ -178,7 +161,7 @@ ${state.alive.filter(p => p !== voter)
   });
 }
 
-/* ---------- RESULTS ---------- */
+/* ---------- RESULTS + ANALYTICS ---------- */
 
 function resultsScreen() {
   const tally = {};
@@ -196,50 +179,96 @@ function resultsScreen() {
     }
   }
 
-  // 🔒 TIE = SKIP
+  const voteLines = state.alive.map(p =>
+    `${p}: ${tally[p] || 0} vote(s)`
+  ).join("\n");
+
+  // ---- TIE CASE ----
   if (topPlayers.length > 1) {
-    state.votes = {};
-    state.cycle++;
-    return discussionScreen();
+    render(`
+<div class="term">
+📊 VOTE ANALYTICS – Cycle ${state.cycle}
+
+${voteLines}
+
+Result: TIE – no one eliminated ⚠️
+Remaining Players (${state.alive.length}):
+${state.alive.join(", ")}
+</div>
+
+<div class="row">
+  <button class="btn" id="next">➡️ Continue</button>
+</div>
+    `);
+
+    document.getElementById("next").onclick = () => {
+      state.votes = {};
+      state.cycle++;
+      discussionScreen();
+    };
+    return;
   }
 
+  // ---- ELIMINATION ----
   const eliminated = topPlayers[0];
   state.alive = state.alive.filter(p => p !== eliminated);
   state.eliminated.push(eliminated);
 
+  // ---- WIN CHECKS ----
   if (eliminated === state.imposter) {
-    return endScreen("🎯 GROUP WINS! Imposter eliminated.");
+    return endScreen("🎯 GROUP WINS! Imposter eliminated.", voteLines);
   }
 
   if (state.alive.length === 2 && state.alive.includes(state.imposter)) {
-    return endScreen("🕵️ IMPOSTER WINS! Final 2.");
+    return endScreen("🕵️ IMPOSTER WINS! Final 2.", voteLines);
   }
 
-  state.votes = {};
-  state.cycle++;
-  discussionScreen();
+  render(`
+<div class="term">
+📊 VOTE ANALYTICS – Cycle ${state.cycle}
+
+${voteLines}
+
+Eliminated: ${eliminated} ❌
+Remaining Players (${state.alive.length}):
+${state.alive.join(", ")}
+</div>
+
+<div class="row">
+  <button class="btn" id="next">➡️ Next Cycle</button>
+</div>
+  `);
+
+  document.getElementById("next").onclick = () => {
+    state.votes = {};
+    state.cycle++;
+    discussionScreen();
+  };
 }
 
 /* ---------- END ---------- */
 
-function endScreen(msg) {
+function endScreen(msg, voteLines) {
   render(`
 <div class="term">
 ${msg}
 
 Secret Word: ${state.word}
 Imposter: ${state.imposter}
-Eliminated: ${state.eliminated.join(", ")}
+
+Final Vote Data:
+${voteLines}
+
+Eliminated Order:
+${state.eliminated.join(" → ")}
 </div>
 
 <div class="row">
   <button class="btn" id="again">🔁 New Round</button>
-  <button class="btn" id="reset">🧹 Reset</button>
 </div>
   `);
 
   document.getElementById("again").onclick = startRound;
-  document.getElementById("reset").onclick = setupScreen;
 }
 
 setupScreen();
