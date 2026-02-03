@@ -224,18 +224,31 @@ function resultsScreen() {
     tally[suspect] = (tally[suspect] || 0) + 1;
   }
 
-  // Pick eliminated: highest votes; if tie, random among top
-  let top = -1;
-  let topPlayers = [];
-  for (const [name, count] of Object.entries(tally)) {
-    if (count > top) {
-      top = count;
-      topPlayers = [name];
-    } else if (count === top) {
-      topPlayers.push(name);
-    }
+  // Pick eliminated: highest votes; if tie, skip elimination
+let top = -1;
+let topPlayers = [];
+
+for (const [name, count] of Object.entries(tally)) {
+  if (count > top) {
+    top = count;
+    topPlayers = [name];
+  } else if (count === top) {
+    topPlayers.push(name);
   }
-  const eliminated = topPlayers.length ? pick(topPlayers) : null; 
+}
+
+// 👉 TIE CASE: skip elimination
+if (topPlayers.length > 1) {
+  state.votes = {};
+  state.cycle++;
+  discussionScreen();
+  return;
+}
+
+// Single clear elimination
+const eliminated = topPlayers[0];
+
+  }
 
   // Build tally lines (for remaining players)
   const votesCast = Object.keys(state.votes).length;
