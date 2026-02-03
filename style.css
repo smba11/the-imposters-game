@@ -1,14 +1,14 @@
-body{margin:0;font-family:system-ui,Arial;background:#0b0f14;color:#e6edf3}  
-.wrap{max-width:900px;margin:0 auto;padding:18px}  
-h1{margin:10px 0 6px} 
-.sub{margin:0 0 14px;color:#9fb0c0}
-.card{border:1px solid #223047;border-radius:14px;padding:14px;background:#05070a} 
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px} 
+body{margin:0;font-family:system-ui,Arial;background:#0b0f14;color:#e6edf3} 
+.wrap{max-width:900px;margin:0 auto;padding:18px}
+h1{margin:10px 0 6px}
+.sub{margin:0 0 14px;color:#9fb0c0} 
+.card{border:1px solid #223047;border-radius:14px;padding:14px;background:#05070a}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .input{flex:1;min-width:220px;padding:10px 12px;border-radius:12px;border:1px solid #223047;background:#0b0f14;color:#e6edf3}
 .btn{padding:10px 14px;border-radius:12px;border:1px solid #223047;background:#111a29;color:#e6edf3;cursor:pointer;font-weight:700}
-.btn:hover{border-color:#355277} 
+.btn:hover{border-color:#355277}
+.btn:disabled{opacity:.5;cursor:not-allowed}
 .pill{display:inline-block;border:1px solid #223047;border-radius:999px;padding:6px 10px;margin:6px 6px 0 0;color:#9fb0c0}
-.term{white-space:pre-wrap;line-height:1.35;font-family:ui-monospace,Menlo,Consolas,monospace} 
-.good{color:#34d399;font-weight:800} 
-.bad{color:#fb7185;font-weight:800}  
+.term{white-space:pre-wrap;line-height:1.35;font-family:ui-monospace,Menlo,Consolas,monospace}
+.voteBox{min-width:180px} 
  
